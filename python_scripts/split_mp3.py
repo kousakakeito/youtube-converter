@@ -4,30 +4,20 @@ import requests
 import json
 
 def identify_and_split(mp3_file_path, output_dir, shazam_api_key):
-    # Shazam APIエンドポイント
     url = "https://shazam-api6.p.rapidapi.com/shazam/recognize/"
-    
-    # ヘッダーにAPIキーを設定
     headers = {
         "x-rapidapi-key": shazam_api_key,
         "x-rapidapi-host": "shazam-api6.p.rapidapi.com",
         "Content-Type": "multipart/form-data; boundary=---011000010111000001101001"
     }
-    
-    # MP3ファイルを読み込む
-    files = {
-        'file': open(mp3_file_path, 'rb')
-    }
-    
-    # Shazam APIにリクエストを送信
+    files = {'file': open(mp3_file_path, 'rb')}
     response = requests.post(url, headers=headers, files=files)
     response_data = response.json()
-    
+
     if response.status_code != 200:
         print(f"Failed to identify the song: {response_data}")
         return False
-    
-    # 曲情報を取得し、ファイル分割処理を実行
+
     segments = response_data['track']['sections'][0]['text']
     for i, segment in enumerate(segments):
         start_time = segment['start']
@@ -38,21 +28,21 @@ def identify_and_split(mp3_file_path, output_dir, shazam_api_key):
         output_file_path = os.path.join(output_dir, f"{sanitized_title}.mp3")
         ffmpeg_command = f'ffmpeg -i "{mp3_file_path}" -ss {start_time} -to {end_time} -c copy "{output_file_path}"'
         os.system(ffmpeg_command)
-    
+
     return True
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
         print("Usage: python split_mp3.py <mp3_file_path> <output_dir> <shazam_api_key>")
         sys.exit(1)
-    
+
     mp3_file_path = sys.argv[1]
     output_dir = sys.argv[2]
     shazam_api_key = sys.argv[3]
-    
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    
+
     result = identify_and_split(mp3_file_path, output_dir, shazam_api_key)
     if result:
         print("MP3 file has been successfully split.")
