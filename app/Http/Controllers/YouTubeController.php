@@ -21,7 +21,7 @@ class YouTubeController extends Controller
     {
         // すべてのセッションデータを消去
         Session::flush();
-
+        Cache::flush();
         $tempDir = storage_path('app/public/temp');
         $splitDir = storage_path('app/public/temp/split');
 
@@ -182,6 +182,8 @@ class YouTubeController extends Controller
             // キャッシュからデータを取得してセッションに保存
             $data = Cache::get('mp3_convert_data');
             Session::put('mp3_convert_data', $data);
+        }else if($status === 'restart'){
+            Log::info('not_data');
         }
         return response()->json(['status' => $status]);
     }

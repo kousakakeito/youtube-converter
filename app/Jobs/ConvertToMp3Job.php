@@ -175,7 +175,11 @@ class ConvertToMp3Job implements ShouldQueue
 
             // セッションに保存
             Cache::put('mp3_convert_data', $data, 300);
-            Cache::put('job_status', 'completed');
+            if(File::exists($mp3File) && File::size($mp3File) > 0){
+               Cache::put('job_status', 'completed');
+            }else{
+               Cache::put('job_status', 'restart'); 
+            }
         } catch (Exception $e) {
             Log::error('ConvertToMp3Job failed', [
                 'url' => $videoUrl,

@@ -144,10 +144,13 @@
                 url: '/job-status',
                 method: 'GET',
                 success: function(response) {
+                    console.log(response.status);
                     if (response.status === 'completed') {
                         setTimeout(function() {
                             window.location.reload(); // ジョブ完了後にページをリロード
                         }, 4000); 
+                    } else if(response.status === 'restart'){
+                        startMp3Convert(event);
                     } else if (response.status === 'failed') {
                         console.error('ジョブのステータスが失敗しました。');
                     } else {
