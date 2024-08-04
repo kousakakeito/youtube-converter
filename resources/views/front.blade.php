@@ -75,9 +75,13 @@
     @if(session('split_files'))
         <div id="split-files" style="margin-top: 20px;">
             <h2>分割されたファイル:</h2>
+            <button id="download-selected-button">チェックした項目をダウンロード</button>
             @foreach(session('split_files') as $file)
                 <div class="file-card">
-                    <p>{{ $file['title'] }}</p>
+                    <div class="file-info">
+                        <input type="checkbox" class="file-checkbox" data-file-path="{{ $file['file_path'] }}" data-file-title="{{ $file['title'] }}">
+                        <p>{{ $file['title'] }}</p>
+                    </div>
                     <div class="audio-container">
                         <audio controls>
                             <source src="{{ asset('storage/' . $file['file_path']) }}" type="audio/mpeg">
@@ -89,6 +93,17 @@
             @endforeach
         </div>
     @endif
+
+    <!-- フォルダ名指定用のモーダル -->
+    <div id="folderNameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('folderNameModal')">&times;</span>
+            <h2>ダウンロード先のフォルダを作成</h2>
+            <p>フォルダ名を入力してください:</p>
+            <input type="text" id="folderName" placeholder="フォルダ名">
+            <button id="folderNameNextButton">完了</button>
+        </div>
+    </div>
 
     <script>
         
@@ -202,6 +217,59 @@
             }, 1000); 
             
         }
+
+
+        // モーダルを開く関数
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = "block";
+        }
+
+        // モーダルを閉じる関数
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        // チェックした項目をダウンロードボタンのクリックイベント
+        if(document.getElementById('download-selected-button')){
+            document.getElementById('download-selected-button').addEventListener('click', function() {
+                openModal('folderNameModal');
+            });
+        };
+
+        // フォルダ名指定の完了ボタンのクリックイベント
+        document.getElementById('folderNameNextButton').addEventListener('click', function() {
+            closeModal('folderNameModal');
+
+            let folderName = document.getElementById('folderName').value;
+
+            // チェックされたファイルを取得
+            let selectedFiles = [];
+            document.querySelectorAll('.file-checkbox:checked').forEach(function(checkbox) {
+                selectedFiles.push({
+                    filePath: checkbox.getAttribute('data-file-path'),
+                    fileTitle: checkbox.getAttribute('data-file-title')
+                });
+            });
+
+            // サーバーにリクエストを送信
+            $.ajax({
+                url: '/download-audio-files',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: {
+                    folderName: folderName,
+                    files: selectedFiles
+                },
+                success: function(response) {
+                    alert('ファイルのダウンロードに成功しました！');
+                },
+                error: function(response) {
+                    alert('ファイルのダウンロードに失敗しました。');
+                }
+            });
+        });
     </script>
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </body>

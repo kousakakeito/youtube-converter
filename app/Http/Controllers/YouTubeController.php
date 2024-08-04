@@ -539,4 +539,63 @@ class YouTubeController extends Controller
     
         return asset('storage/temp/split/' . basename($mergedFilePath));
     }
+
+    public function downloadAudioFiles(Request $request)
+    {
+        $folderName = $request->input('folderName');
+        $files = $request->input('files');
+
+        // ログ: リクエストされたフォルダ名とファイル
+        Log::info('Received request to download audio files.', [
+            'folderName' => $folderName,
+            'files' => $files,
+        ]);
+
+        // 保存先のディレクトリ
+        $targetDirectory = 'C:\Users\k-kousaka\Desktop\\' . $folderName;
+
+        // ログ: 保存先ディレクトリ
+        Log::info('Target directory for saving files.', [
+            'targetDirectory' => $targetDirectory,
+        ]);
+
+        // ディレクトリを作成
+        if (!File::exists($targetDirectory)) {
+            if (File::makeDirectory($targetDirectory, 0777, true, true)) {
+                Log::info('Directory created successfully.', ['directory' => $targetDirectory]);
+            } else {
+                Log::error('Failed to create directory.', ['directory' => $targetDirectory]);
+                return response()->json(['message' => 'Failed to create directory.'], 500);
+            }
+        } else {
+            Log::info('Directory already exists.', ['directory' => $targetDirectory]);
+        }
+
+        // 各ファイルをターゲットディレクトリにコピー
+        foreach ($files as $file) {
+            $sourceFilePath = storage_path('app/public/' . $file['filePath']);
+            $destinationFilePath = $targetDirectory . DIRECTORY_SEPARATOR . $file['fileTitle'] . ".mp3";
+
+            Log::info($file['filePath']);
+
+            Log::info('Copying file.', [
+                'source' => $sourceFilePath,
+                'destination' => $destinationFilePath,
+            ]);
+
+            if (File::exists($sourceFilePath)) {
+                if (File::copy($sourceFilePath, $destinationFilePath)) {
+                    Log::info('File copied successfully.', ['file' => $file['fileTitle']]);
+                } else {
+                    Log::error('Failed to copy file.', ['file' => $file['fileTitle']]);
+                }
+            } else {
+                Log::error('Source file does not exist.', ['file' => $file['fileTitle']]);
+            }
+        }
+
+        Log::info('All files processed.');
+
+        return response()->json(['message' => 'Files downloaded successfully']);
+    }
 }

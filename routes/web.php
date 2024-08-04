@@ -20,3 +20,5 @@ Route::get('/job-status', [YouTubeController::class, 'getJobStatus']);
 Route::post('/split-mp3', [YouTubeController::class, 'splitMp3'])->name('split-mp3');
 
 Route::get('/get-progress3', [YouTubeController::class, 'getProgress3']);
+
+Route::post('/download-audio-files', [YouTubeController::class, 'downloadAudioFiles']);
